@@ -1,61 +1,64 @@
+#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+
+static int digits(long n)
+{
+    int d = 0;
+    do
+    {
+        d++;
+        n /= 10;
+    } while (n);
+    return d;
+}
 
 int calc(long start, long end)
 {
     long total = 0;
 
-    for (int k = 1; k <= 6; k++)
-    {
-        long base = 1;
-        for (int i = 0; i < k; i++)
-        {
-            base *= 10;
-        }
-        for (long x = base / 10; x < base; x++)
-        {
-            long n = x * base + x;
+    int d_start = digits(start);
+    int d_end = digits(end);
 
-            if (n >= start && n <= end)
-            {
-                total += n;
-            }
-            if (n > end)
-                break;
+    if (d_start == d_end && (d_start % 2) != 0)
+    {
+        long lower = (long)pow(10, d_start - 1);
+        long upper = (long)pow(10, d_start);
+
+        if (start >= lower && end < upper)
+        {
+            return 0;
         }
     }
+
+    long num = start / (long)pow(10, d_start / 2);
+
+    for (long i = start; i <= end; i++)
+    {
+        if (num != 0 && (i % num) == 0)
+        {
+            total += num;
+        }
+    }
+
+    printf("total: %ld\n", total);
     return total;
 }
 
-int invalids(const char* line)
+int invalids(char* line)
 {
-    long total = 0;
-
-    while (*line)
+    int total = 0;
+    char* pair = strtok(line, ",");
+    while (pair != NULL)
     {
-        char* end;
+        printf("%s\n", pair);
+        long first, last;
 
-        long first = strtol(line, &end, 10);
-        if (end == line)
-            break;
-        line = end;
-
-        if (*line != '-')
-            break;
-        line++;
-
-        long second = strtol(line, &end, 10);
-        if (end == line)
-            break;
-        line = end;
-
-        total += calc(first, second);
-
-        if (',' == *line)
+        if (sscanf(pair, "%ld-%ld", &first, &last) == 2)
         {
-            line++;
+            total += calc(first, last);
         }
-        break;
+        pair = strtok(NULL, ",");
     }
     return total;
 }
