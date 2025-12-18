@@ -1,87 +1,67 @@
-#include <math.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-static int digits(long n)
-{
-    int d = 0;
-    do
-    {
-        d++;
-        n /= 10;
-    } while (n);
-    return d;
+uint64_t calc(uint64_t start, uint64_t end) {
+
+  uint64_t total = 0;
+  for (uint64_t i = start; i <= end; i++) {
+    char buf[11];
+    snprintf(buf, sizeof(buf), "%lu", i);
+    if (strlen(buf) % 2 != 0)
+      continue;
+
+    int half_len = strlen(buf) / 2;
+    char *half1 = malloc(half_len + 1);
+    char *half2 = malloc(half_len + 1);
+    memcpy(half1, buf, half_len);
+    memcpy(half2, buf + half_len, half_len);
+    half1[half_len] = '\0';
+    half2[half_len] = '\0';
+
+    if (strcmp(half1, half2) == 0) {
+      total += i;
+    }
+
+    free(half1);
+    free(half2);
+  }
+  printf("total for range: %lu\n", total);
+  return total;
 }
 
-int calc(long start, long end)
-{
-    long total = 0;
+uint64_t invalids(char *line) {
+  uint64_t total = 0;
+  char *pair = strtok(line, ",");
+  while (pair != NULL) {
+    printf("%s\n", pair);
+    uint64_t first, last;
 
-    int d_start = digits(start);
-    int d_end = digits(end);
-
-    if (d_start == d_end && (d_start % 2) != 0)
-    {
-        long lower = (long)pow(10, d_start - 1);
-        long upper = (long)pow(10, d_start);
-
-        if (start >= lower && end < upper)
-        {
-            return 0;
-        }
+    if (sscanf(pair, "%lu-%lu", &first, &last) == 2) {
+      total += calc(first, last);
     }
-
-    long num = start / (long)pow(10, d_start / 2);
-
-    for (long i = start; i <= end; i++)
-    {
-        if (num != 0 && (i % num) == 0)
-        {
-            total += num;
-        }
-    }
-
-    printf("total: %ld\n", total);
-    return total;
+    pair = strtok(NULL, ",");
+  }
+  return total;
 }
 
-int invalids(char* line)
-{
-    int total = 0;
-    char* pair = strtok(line, ",");
-    while (pair != NULL)
-    {
-        printf("%s\n", pair);
-        long first, last;
+int main() {
+  FILE *input;
+  input = fopen("input", "r");
+  if (!input) {
+    perror("fopen");
+    return 1;
+  }
 
-        if (sscanf(pair, "%ld-%ld", &first, &last) == 2)
-        {
-            total += calc(first, last);
-        }
-        pair = strtok(NULL, ",");
-    }
-    return total;
-}
+  char line[512];
+  uint64_t result = 0;
 
-int main()
-{
-    FILE* input;
-    input = fopen("input", "r");
-    if (!input)
-    {
-        perror("fopen");
-        return 1;
-    }
+  while (fgets(line, sizeof(line), input)) {
+    result = invalids(line);
+  }
+  fclose(input);
 
-    char line[512];
-    int result = 0;
-
-    while (fgets(line, sizeof(line), input))
-    {
-        result = invalids(line);
-    }
-    fclose(input);
-
-    printf("%i", result);
-    return 0;
+  printf("%lu", result);
+  return 0;
 }
